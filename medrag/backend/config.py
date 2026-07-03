@@ -3,7 +3,7 @@ from os import environ
 from dotenv import load_dotenv
 
 
-
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 

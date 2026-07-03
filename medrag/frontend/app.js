@@ -2,7 +2,7 @@ let currentDocumentId = "";
 let currentConversationId = "";
 
 function getApiBase() {
-  return document.getElementById("apiBase").value.trim().replace(/\/+$/, "");
+  return window.location.origin;
 }
 
 function setStatus(id, message, type = "info") {
