@@ -88,33 +88,17 @@ CHROMA_DIR=D:\medrag_runtime\chroma_db
 
 注意：`.env` 不应提交到版本库。
 
-## 启动后端
+## 启动
 
-在项目根目录执行：
-```
+```cmd
 conda activate medrag
 cd /d D:\MedRag\medrag\backend
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+set HF_HUB_OFFLINE=1
+set TRANSFORMERS_OFFLINE=1
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-后端启动后访问：
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-## 启动前端
-
-前端是静态 HTML，可以直接打开：
-
-```
-
-conda activate medrag
-cd /d D:\MedRag\medrag\frontend
-python -m http.server 5500
-```
-
-如果浏览器限制本地请求，可用 VS Code Live Server 或任意静态文件服务器启动，并保证地址在后端 CORS 白名单中。
+访问：http://127.0.0.1:8000/
 
 ## 当前重点
 

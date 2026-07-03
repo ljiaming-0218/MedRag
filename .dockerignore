@@ -1,0 +1,13 @@
+.git/
+.vscode/
+.codex/
+.agents/
+
+runtime/
+rag_tests/
+
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.env
+**/data/
