@@ -1,0 +1,42 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from routers import router as pdf_router
+from contextlib import asynccontextmanager
+from services.db import close_database, connect_database
+from services.message_store import create_message_indexes
+from services.conversation_store import create_conversation_indexes
+from routers.conversation_router import router as conversation_router
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        await connect_database()
+        await create_conversation_indexes()
+        await create_message_indexes()
+        yield
+    finally:
+        await close_database()
+
+
+app = FastAPI(
+    title="MedRAG 医学文献问答系统",
+    lifespan=lifespan,
+)
+
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.include_router(pdf_router)
+app.include_router(conversation_router)
+
+@app.get("/")
+def health_check() -> dict:
+    return {"提示": "MedRAG 后端服务正在运行"}

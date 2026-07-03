@@ -1,0 +1,11 @@
+medrag/backend/.env
+medrag/backend/data/
+rag_tests/chroma_data/
+**/__pycache__/
+*.pyc
+.venv/
+medrag/backend/.venv/
+runtime/
+.env
+.pytest_cache/
+*.log
