@@ -1,6 +1,9 @@
 from sentence_transformers import CrossEncoder
 
-reranker_model  = CrossEncoder("BAAI/bge-reranker-base")
+reranker_model = CrossEncoder(
+    "BAAI/bge-reranker-base",
+    local_files_only=True,
+)
 
 def rerank_chunks(query: str, chunks: list[dict], top_k: int) -> list[dict]:
     if not query.strip():
