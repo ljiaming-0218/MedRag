@@ -88,7 +88,34 @@
           <span class="topbar-badge">Conversation API</span>
         </header>
 
+        <section class="chat" id="chatWindow">
+          <div class="welcome">
+            <div class="welcome-card">
+              <h1>上传医学文献，然后开始提问</h1>
+              <p>
+                左侧负责上传、索引和检索调试，中间负责显示问答结果，底部负责输入问题。
+                PDF 索引完成后会创建 conversation，连续提问会保存 user、assistant 消息和引用来源。
+              </p>
 
+              <div class="quick-grid">
+                <div class="quick-card">
+                  <strong>1. 建立索引</strong>
+                  <span>先在左侧上传 PDF，得到 document_id。</span>
+                </div>
+                <div class="quick-card">
+                  <strong>2. 输入问题</strong>
+                  <span>底部输入医学文献相关问题，设置 top-k。</span>
+                </div>
+                <div class="quick-card">
+                  <strong>3. 查看引用</strong>
+                  <span>回答下方会显示检索到的原文片段。</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="answerResult" class="chat-result"></div>
+        </section>
 
         <section class="composer-wrap">
           <div class="composer">
