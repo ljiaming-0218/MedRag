@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="MedRAG 医学文献问答系统",
+    title="DocRAG Agent PDF 文献阅读助手",
     lifespan=lifespan,
 )
 
@@ -43,7 +43,7 @@ app.include_router(conversation_router)
 
 @app.get("/health")
 def health_check() -> dict:
-    return {"提示": "MedRAG 后端服务正在运行"}
+    return {"提示": "DocRAG 后端服务正在运行"}
 
 
 app.mount(

@@ -268,7 +268,7 @@ async function answerQuestion() {
       <div class="message">
         <div class="avatar assistant">AI</div>
         <div class="message-content">
-          <div class="message-role">MedRAG Assistant</div>
+          <div class="message-role">DocRAG Assistant</div>
           <p>${escapeHtml(data.answer)}</p>
           <div class="sources-title">引用来源 · ${escapeHtml(data.sources?.length ?? 0)} 条</div>
           <div id="${sourceTargetId}"></div>

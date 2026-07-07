@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MedRAG 医学文献问答系统</title>
+    <title>DocRAG Agent：面向 PDF 文献阅读的 RAG 智能助手</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -13,8 +13,8 @@
           <div class="brand">
             <span class="brand-mark">M</span>
             <div>
-              <strong>MedRAG</strong>
-              <span>医学文献知识库问答</span>
+              <strong>DocRAG Agent</strong>
+              <span>PDF 文献阅读与问答</span>
             </div>
           </div>
           <button class="new-chat-like" type="button" onclick="startNewConversation()">
@@ -49,9 +49,6 @@
               <div id="indexStatus" class="status"></div>
               <div id="indexResult" class="result"></div>
 
-              <p class="hint">
-                启动后端：在 <code>backend</code> 目录运行 <code>uvicorn main:app --reload</code>。
-              </p>
             </div>
           </details>
 
@@ -82,7 +79,7 @@
       <main class="main">
         <header class="topbar">
           <div class="topbar-title">
-            <strong>MedRAG 医学文献问答系统</strong>
+            <strong>DocRAG Agent：面向 PDF 文献阅读的 RAG 智能助手</strong>
             
           </div>
           <span class="topbar-badge">Conversation API</span>
@@ -91,7 +88,7 @@
         <section class="chat" id="chatWindow">
           <div class="welcome">
             <div class="welcome-card">
-              <h1>上传医学文献，然后开始提问</h1>
+              <h1>上传 PDF 文献，然后开始提问</h1>
               <p>
                 左侧负责上传、索引和检索调试，中间负责显示问答结果，底部负责输入问题。
                 PDF 索引完成后会创建 conversation，连续提问会保存 user、assistant 消息和引用来源。
@@ -104,7 +101,7 @@
                 </div>
                 <div class="quick-card">
                   <strong>2. 输入问题</strong>
-                  <span>底部输入医学文献相关问题，设置 top-k。</span>
+                  <span>底部输入文献相关问题，设置 top-k。</span>
                 </div>
                 <div class="quick-card">
                   <strong>3. 查看引用</strong>
@@ -125,13 +122,13 @@
             </div>
 
             <div class="input-shell">
-              <textarea id="answerQuery" placeholder="向这篇医学文献提问，例如：这篇论文的研究目的、方法和结论分别是什么？"></textarea>
+              <textarea id="answerQuery" placeholder="向这份文献提问，例如：这篇论文的研究目的、方法和结论分别是什么？"></textarea>
               <button id="answerButton" class="send-button" type="button" onclick="answerQuestion()" aria-label="发送">↑</button>
             </div>
 
             <div id="answerStatus" class="status"></div>
             <p class="composer-note">
-              本系统仅用于医学文献辅助阅读，不提供临床诊断或治疗建议。
+              本系统用于辅助阅读 PDF 文献，回答内容请结合原始文档与引用来源核验。
             </p>
           </div>
         </section>
