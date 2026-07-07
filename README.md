@@ -19,7 +19,7 @@ DocRAG Agent 是一个面向 PDF 文献阅读的 RAG 智能助手。系统支持
 
 ## 在线演示
 
-- Hugging Face Space：https://ljiaming-0218-medrag.hf.space
+- Hugging Face Space：https://maoxiao-1205-medrag.hf.space/
 - 免费实例可能存在冷启动，首次访问需要等待模型加载。
 
 ## RAG 流程
