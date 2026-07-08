@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from routers.user_router import user_router
+from services.user_store import create_user_indexes
 from routers import router as pdf_router
 from contextlib import asynccontextmanager
 from services.db import close_database, connect_database
@@ -16,6 +18,7 @@ async def lifespan(app: FastAPI):
         await connect_database()
         await create_conversation_indexes()
         await create_message_indexes()
+        await create_user_indexes()
         yield
     finally:
         await close_database()
@@ -40,7 +43,7 @@ app.add_middleware(
 )
 app.include_router(pdf_router)
 app.include_router(conversation_router)
-
+app.include_router(user_router)
 @app.get("/health")
 def health_check() -> dict:
     return {"提示": "DocRAG 后端服务正在运行"}
