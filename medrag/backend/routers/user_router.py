@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 
@@ -17,7 +17,7 @@ def raise_service_error(error: Exception) -> None:
     status_code = 400 if isinstance(error, ValueError) else 500
     raise HTTPException(status_code=status_code, detail=str(error)) from error
 
-@router.post("/users")
+@router.post("")
 async def create_user_endpoint(user_request: CreateUserRequest) -> dict:
     try:
         user = await create_or_get_user(user_request.username, user_request.default_user_type)

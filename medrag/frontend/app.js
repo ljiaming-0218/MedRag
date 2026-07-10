@@ -52,13 +52,14 @@ function buildUrl(path, params) {
   return url;
 }
 
-async function createConversation(documentId, title) {
+async function createConversation(userId, documentId, title) {
   const response = await fetch(`${getApiBase()}/conversations`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      user_id: userId,
       document_id: documentId,
       title,
     }),
@@ -75,7 +76,8 @@ async function startNewConversation() {
   try {
     const file = document.getElementById("pdfFile").files[0];
     const title = file ? file.name.replace(/\.pdf$/i, "") : "新会话";
-    const conversation = await createConversation(currentDocumentId, title);
+    const userId = document.getElementById("userId").value.trim();
+    const conversation = await createConversation(userId, currentDocumentId, title);
     currentConversationId = conversation.conversation_id;
     document.getElementById("answerConversationId").value = currentConversationId;
     document.getElementById("answerResult").innerHTML = "";
@@ -144,6 +146,7 @@ function renderSearchResults(targetId, chunks) {
 }
 
 async function indexPdf() {
+  const userId = document.getElementById("userId").value.trim();
   const fileInput = document.getElementById("pdfFile");
   const chunkSize = document.getElementById("chunkSize").value;
   const chunkOverlap = document.getElementById("chunkOverlap").value;
@@ -164,6 +167,7 @@ async function indexPdf() {
 
   try {
     const url = buildUrl("/pdf/index", {
+      user_id: userId,
       chunk_size: chunkSize,
       chunk_overlap: chunkOverlap,
     });
@@ -177,7 +181,7 @@ async function indexPdf() {
     document.getElementById("searchDocumentId").value = currentDocumentId;
 
     const title = fileInput.files[0].name.replace(/\.pdf$/i, "");
-    const conversation = await createConversation(currentDocumentId, title);
+    const conversation = await createConversation(userId, currentDocumentId, title);
     currentConversationId = conversation.conversation_id;
     document.getElementById("answerConversationId").value = currentConversationId;
 
@@ -192,6 +196,7 @@ async function indexPdf() {
 }
 
 async function searchChunks() {
+  const userId = document.getElementById("userId").value.trim();
   const documentId = document.getElementById("searchDocumentId").value.trim();
   const query = document.getElementById("searchQuery").value.trim();
   const topK = document.getElementById("searchTopK").value;
@@ -210,6 +215,7 @@ async function searchChunks() {
   try {
     const url = buildUrl("/pdf/search", {
       document_id: documentId,
+      user_id: userId,
       query,
       n_results: topK,
     });
@@ -230,9 +236,9 @@ async function answerQuestion() {
   const query = document.getElementById("answerQuery").value.trim();
   const topK = Number(document.getElementById("answerTopK").value);
   const button = document.getElementById("answerButton");
-
-  if (!conversationId || !query) {
-    setStatus("answerStatus", "请先建立 PDF 索引并输入问题。", "error");
+  const userId = document.getElementById("userId").value.trim();
+  if (!conversationId || !query || !userId) {
+    setStatus("answerStatus", "请先建立 PDF 索引并输入问题和用户 ID。", "error");
     return;
   }
 
@@ -247,6 +253,7 @@ async function answerQuestion() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        user_id: userId,
         query,
         history_limit: 6,
         n_results: topK,

@@ -1,17 +1,20 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from services.conversation_store import (
-    find_conversations,
-    insert_conversation,
-)
+from stores.conversation_store import find_conversations,insert_conversation
 
+from services.user_service import get_existing_user
 
-async def create_conversation(document_id: str, title: str = "新会话") -> dict:
+async def create_conversation(user_id: str, document_id: str, title: str = "新会话") -> dict:
     # 清理并检查 document_id
     document_id = document_id.strip()
     if not document_id:
         raise ValueError("document_id不能为空")
+    
+    if not user_id.strip():
+        raise ValueError("user_id不能为空")
+    
+    await get_existing_user(user_id)
     # 清理标题，空标题改为“新会话”
     title = title.strip() or "新会话"
     # 生成 now 和 conversation_id
@@ -21,6 +24,7 @@ async def create_conversation(document_id: str, title: str = "新会话") -> dic
         "_id": conversation_id, 
         "title": title,
         "document_id": document_id,
+        "user_id": user_id,  
         "created_at": now,
         "updated_at": now,
     }
@@ -36,16 +40,23 @@ async def create_conversation(document_id: str, title: str = "新会话") -> dic
     }
 
 
-async def list_conversations(limit: int = 50) -> list[dict]:
+async def list_conversations(user_id: str, limit: int = 50) -> list[dict]:
+    user_id = user_id.strip()
+    if not user_id:
+        raise ValueError("user_id 不能为空")
+    
+    await get_existing_user(user_id) 
+
     if limit <= 0 or limit > 100:
         raise ValueError("limit 必须在 1 到 100 之间")
     
-    conversations = await find_conversations(limit)
+    conversations = await find_conversations(user_id, limit)
     results = []
 
     for conversation in conversations:
         results.append({
             "conversation_id": conversation["_id"],
+            "user_id": conversation["user_id"],
             "title": conversation["title"],
             "document_id": conversation["document_id"],
             "created_at": conversation["created_at"],

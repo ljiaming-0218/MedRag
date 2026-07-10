@@ -1,12 +1,13 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+from services.user_service import get_existing_user
 from services.validation_service import validate_chunk_params
 from services.llm_service import generate_answer
 from services.prompt_service import build_rag_prompt
 from services.text_splitter import split_pages
 from services.embedding_service import embed_chunks
 from services.vector_store_service import save_chunks
-from services.build_pdf_pages import build_pdf_pages
+from services.build_pdf_pages import build_pdf_pages, parse_document_pages, prepare_document
 from services.search_service import search_relevant_chunks
 
 router = APIRouter(
@@ -21,9 +22,9 @@ def raise_service_error(error: Exception) -> None:
 
 
 @router.post("/search")
-async def search_pdf(document_id: str, query: str, n_results: int = 3) -> dict:
+async def search_pdf(user_id: str, document_id: str, query: str, n_results: int = 3) -> dict:
     try:
-        results = search_relevant_chunks(document_id, query, n_results)
+        results = search_relevant_chunks(user_id, document_id, query, n_results)
     except (ValueError, RuntimeError) as e:
         raise_service_error(e)
 
@@ -37,15 +38,34 @@ async def search_pdf(document_id: str, query: str, n_results: int = 3) -> dict:
     }
 
 @router.post("/index")
-async def index_pdfs(file: UploadFile = File(...), chunk_size: int = 500, chunk_overlap: int = 50) -> dict:
+async def index_pdfs(user_id: str, file: UploadFile = File(...), chunk_size: int = 500, chunk_overlap: int = 50) -> dict:
+    try:
+        user = await get_existing_user(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     
+
     try:
         validate_chunk_params(chunk_size, chunk_overlap)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
-    context = await build_pdf_pages(file)  # 调用上传函数，确保文件已保存
-    chunks = split_pages(context["每页内容"], chunk_size, chunk_overlap)
+    context = await prepare_document(user_id, file)
+
+    if context["existing_document"]:
+        return {
+            "message": f"文件 '{context['文件名']}' 已存在，跳过索引。",
+            "文件名": context["文件名"],
+            "document_id": context["document_id"],
+            "user_id": user["user_id"],
+            "document_hash": context["document_hash"],
+            "existing_document": context["existing_document"],
+        }
+
+    pages = parse_document_pages(context["save_path"], context)
+    chunks = split_pages(pages, chunk_size, chunk_overlap)
+
+
     embedded_chunks = embed_chunks(chunks)
     try:
         saved_count = save_chunks(embedded_chunks)
@@ -55,26 +75,36 @@ async def index_pdfs(file: UploadFile = File(...), chunk_size: int = 500, chunk_
     return {
         "message": f"成功处理文件 '{context['文件名']}'，共 {context['总页数']} 页，生成 {len(chunks)} 个文本块，成功保存 {saved_count} 个块到向量数据库。",
         "文件名": context["文件名"],
-        "总页数": context["总页数"],
+        "总页数": len(pages),
         "总块数": len(chunks),
         "成功保存块数": saved_count,
         "chunk_size": chunk_size,
         "chunk_overlap": chunk_overlap,
-        "document_id": context["document_id"]
+        "document_id": context["document_id"],
+        "user_id": user["user_id"],
+        "document_hash": context["document_hash"],
+        "existing_document": context["existing_document"],
+        
     }
 
 @router.post("/parse")
-async def parse_pdf(file: UploadFile = File(...)) -> dict:
-    return await build_pdf_pages(file)
+async def parse_pdf(user_id: str,file: UploadFile = File(...), ) -> dict:
+    return await build_pdf_pages(user_id, file)
 
 @router.post("/chunks")
-async def parse_pdf_chunks(file: UploadFile = File(...), chunk_size: int = 500, chunk_overlap: int = 50) -> dict:
+async def parse_pdf_chunks(user_id: str, file: UploadFile = File(...), chunk_size: int = 500, chunk_overlap: int = 50) -> dict:
+    
+    try:
+        user = await get_existing_user(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
     try:
         validate_chunk_params(chunk_size, chunk_overlap)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    context = await build_pdf_pages(file)  # 调用上传函数，确保文件已保存
+    context = await build_pdf_pages(user_id, file)  # 调用上传函数，确保文件已保存
 
     chunks = split_pages(context["每页内容"], chunk_size, chunk_overlap)
 
@@ -82,13 +112,14 @@ async def parse_pdf_chunks(file: UploadFile = File(...), chunk_size: int = 500, 
         "文件名": context["文件名"],
         "总页数": context["总页数"],
         "每页内容块": chunks,
-        "document_id": context["document_id"]
+        "document_id": context["document_id"],
+        "user_id": user["user_id"],
     }
 
 @router.post("/prompt-preview")
-async def preview_rag_prompt(document_id: str, query: str, n_results: int = 3) -> dict:
+async def preview_rag_prompt(user_id: str, document_id: str, query: str, n_results: int = 3) -> dict:
     try:
-        retrieved_chunks = search_relevant_chunks(document_id, query, n_results)
+        retrieved_chunks = search_relevant_chunks(user_id, document_id, query, n_results)
     except (ValueError, RuntimeError) as e:
         raise_service_error(e)
 
@@ -106,9 +137,9 @@ async def preview_rag_prompt(document_id: str, query: str, n_results: int = 3) -
     }
 
 @router.post("/answer")
-def answer_pdf_question(document_id: str, query: str, n_results: int = 3) -> dict:
+def answer_pdf_question(user_id:str, document_id: str, query: str, n_results: int = 3) -> dict:
     try:
-        retrieved_chunks = search_relevant_chunks(document_id, query, n_results)
+        retrieved_chunks = search_relevant_chunks(user_id, document_id, query, n_results)
     except (ValueError, RuntimeError) as e:
         raise_service_error(e)
 

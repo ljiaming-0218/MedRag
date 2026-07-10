@@ -5,18 +5,19 @@ from services.embedding_service import get_embedding
 from services.vector_store_service import query_chunks
 
 
-def search_relevant_chunks(document_id: str, query: str, n_results: int = 3) -> list[dict]:
+def search_relevant_chunks(user_id: str, document_id: str, query: str, n_results: int = 3) -> list[dict]:
     if not query.strip():
         raise ValueError("查询内容不能为空")
     if n_results <= 0:
         raise ValueError("n_results 必须大于 0")
     if not document_id.strip():
         raise ValueError("document_id 不能为空")
-
+    if not user_id.strip():
+        raise ValueError("user_id 不能为空")
 
 
     query_embedding = get_embedding(query)
-    search_results = query_chunks(document_id, query_embedding, n_results*5)
+    search_results = query_chunks(user_id, document_id,  query_embedding, n_results*5)
     results = []
     
     for doc, score, metadata in zip(search_results["documents"][0],

@@ -17,12 +17,12 @@ async def upload_pdf(file: UploadFile) -> dict:
 
     content = await file.read()
 
-    document_id = sha256(content).hexdigest()
-    save_path = UPLOAD_DIR / f"{document_id}_{safe_name}"
+    document_hash = sha256(content).hexdigest()
+    save_path = UPLOAD_DIR / f"{document_hash}_{safe_name}"
     save_path.write_bytes(content)
     
     return {
         "文件名": safe_name,
         "保存路径": str(save_path),
-        "document_id": document_id
+        "document_hash": document_hash
     }

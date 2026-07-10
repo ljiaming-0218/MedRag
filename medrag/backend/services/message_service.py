@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from services.conversation_store import find_conversation_by_id, update_conversation_updated_at
-from services.message_store import find_recent_messages_by_conversation, insert_message, find_messages_by_conversation
+from stores.conversation_store import find_conversation_by_id, update_conversation_updated_at
+from stores.message_store import find_recent_messages_by_conversation, insert_message, find_messages_by_conversation
 
 
 async def create_message(conversation_id: str, role: str, content: str, sources: list[dict] | None = None) -> dict:
@@ -51,7 +51,11 @@ async def create_message(conversation_id: str, role: str, content: str, sources:
         
     }
 
-async def list_messages(conversation_id: str,) -> list[dict]:
+async def list_messages(user_id: str, conversation_id: str) -> list[dict]:
+    user_id = user_id.strip()
+    if not user_id:
+        raise ValueError("user_id 不能为空")
+
     conversation_id = conversation_id.strip()
     if not conversation_id:
         raise ValueError("conversation_id 不能为空")
@@ -60,10 +64,13 @@ async def list_messages(conversation_id: str,) -> list[dict]:
 
     if conversation is None:
         raise ValueError("会话不存在")
+
+    if conversation["user_id"] != user_id:
+        raise PermissionError("当前用户无权访问该会话")
+
     messages = await find_messages_by_conversation(conversation_id)
 
     results = []
-
     for message in messages:
         results.append({
             "message_id": message["_id"],

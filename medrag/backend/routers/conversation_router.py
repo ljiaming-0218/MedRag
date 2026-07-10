@@ -10,10 +10,12 @@ router = APIRouter(
 )
 
 class CreateConversationRequest(BaseModel):
+    user_id: str
     document_id: str
     title: str = "新会话"
 
 class AskConversationRequest(BaseModel):
+    user_id: str
     query: str = Field(min_length=1)
     history_limit: int = Field(default=6, ge=1, le=20)
     n_results: int = Field(default=3, ge=1, le=10)
@@ -21,30 +23,33 @@ class AskConversationRequest(BaseModel):
 @router.post("", status_code=201)
 async def create_conversation_endpoint(request: CreateConversationRequest,) -> dict:
     try:
-        conversation = await create_conversation(request.document_id, request.title)
+        conversation = await create_conversation(request.user_id, request.document_id, request.title)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
     return conversation
 
 @router.get("")
-async def list_conversations_endpoint(limit: int = Query(default=50, ge=1, le=100),) -> list[dict]:
-    return await list_conversations(limit)
+async def list_conversations_endpoint(user_id: str = Query(...), limit: int = Query(default=50, ge=1, le=100),) -> list[dict]:
+    try:
+        return await list_conversations(user_id, limit)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/{conversation_id}/messages")
-async def list_messages_endpoint(conversation_id: str,) -> list[dict]:
+async def list_messages_endpoint(conversation_id: str, user_id: str = Query(...)) -> list[dict]:
     try:
-        messages = await list_messages(conversation_id)
-    except  ValueError as e:
+        return await list_messages(user_id, conversation_id)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    
-    return messages
 
 
 @router.post("/{conversation_id}/ask")
 async def ask_conversation_endpoint(conversation_id: str, request: AskConversationRequest,) -> dict:
     try:
-        result = await ask_conversation(conversation_id, request.query, request.history_limit, request.n_results)
+        result = await ask_conversation(request.user_id, conversation_id, request.query, request.history_limit, request.n_results)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
