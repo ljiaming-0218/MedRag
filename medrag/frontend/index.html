@@ -3,110 +3,149 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DocRAG Agent：面向 PDF 文献阅读的 RAG 智能助手</title>
+    <title>DocRAG Agent | PDF 文献阅读助手</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app">
+    <section id="authView" class="auth-view">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <span class="brand-mark">D</span>
+          <div>
+            <strong>DocRAG Agent</strong>
+            <p>登录后进入你的 PDF 文献问答工作台</p>
+          </div>
+        </div>
+
+        <form id="authForm" class="auth-form">
+          <label for="usernameInput">用户名</label>
+          <input id="usernameInput" name="username" autocomplete="username" placeholder="例如：jiaming" required />
+
+          <label for="userTypeInput">默认回答模式</label>
+          <select id="userTypeInput" name="default_user_type">
+            <option value="general">普通用户</option>
+            <option value="undergraduate">本科生</option>
+            <option value="graduate_student">研究生</option>
+            <option value="researcher">科研人员</option>
+            <option value="developer">工程开发者</option>
+            <option value="teacher">教师</option>
+          </select>
+
+          <button id="authButton" class="primary-button" type="submit">进入 DocRAG</button>
+          <div id="authStatus" class="status"></div>
+        </form>
+
+        <p class="auth-note">
+          当前是轻量用户模式：系统会根据用户名创建或获取用户，并在本地保存 user_id。
+        </p>
+      </div>
+    </section>
+
+    <div id="appView" class="app hidden">
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="brand">
-            <span class="brand-mark">M</span>
+            <span class="brand-mark">D</span>
             <div>
               <strong>DocRAG Agent</strong>
-              <span>PDF 文献阅读与问答</span>
+              <span>PDF 文献阅读助手</span>
             </div>
           </div>
-          <button class="new-chat-like" type="button" onclick="startNewConversation()">
-            ＋ 开始一次文献问答
-          </button>
+          <button id="newConversationButton" class="new-chat-like" type="button">+ 新建对话</button>
         </div>
 
         <div class="sidebar-scroll">
-          <details class="side-section" open>
-            <summary>后端与知识库设置</summary>
-            <div class="side-body">
-              <p class="side-desc">
-                上传并索引 PDF 后会自动创建会话，后续问题通过 conversation 接口保存历史。
-              </p>
-              <label for="userId">user_id</label>
-              <input id="userId" placeholder="先通过 /users 创建用户后填入" />
-
-              <label for="pdfFile">选择 PDF 文件</label>
-              <input id="pdfFile" type="file" accept="application/pdf,.pdf" />
-
-              <div class="row">
-                <div>
-                  <label for="chunkSize">chunk_size</label>
-                  <input id="chunkSize" type="number" value="500" min="1" />
-                </div>
-                <div>
-                  <label for="chunkOverlap">chunk_overlap</label>
-                  <input id="chunkOverlap" type="number" value="50" min="0" />
-                </div>
-              </div>
-
-              <button id="indexButton" class="primary-button" type="button" onclick="indexPdf()">建立 PDF 索引</button>
-              <div id="indexStatus" class="status"></div>
-              <div id="indexResult" class="result"></div>
-
+          <section class="side-panel">
+            <div class="side-title">
+              <strong>文档索引</strong>
+              <span>上传 PDF 后建立知识库</span>
             </div>
-          </details>
 
-          <details class="side-section">
+            <label for="pdfFile">选择 PDF 文件</label>
+            <input id="pdfFile" type="file" accept="application/pdf,.pdf" />
+
+            <div class="row">
+              <div>
+                <label for="chunkSize">chunk_size</label>
+                <input id="chunkSize" type="number" value="500" min="1" />
+              </div>
+              <div>
+                <label for="chunkOverlap">chunk_overlap</label>
+                <input id="chunkOverlap" type="number" value="50" min="0" />
+              </div>
+            </div>
+
+            <button id="indexButton" class="primary-button" type="button">建立 PDF 索引</button>
+            <div id="indexStatus" class="status"></div>
+            <div id="indexResult" class="result"></div>
+          </section>
+
+          <section class="side-panel">
+            <div class="side-title">
+              <strong>历史会话</strong>
+              <span>选择一个会话继续提问</span>
+            </div>
+            <div id="conversationList" class="conversation-list"></div>
+            <div id="conversationStatus" class="status"></div>
+          </section>
+
+          <details class="side-panel">
             <summary>检索调试</summary>
             <div class="side-body">
-              <p class="side-desc">
-                这里保留原来的检索功能，用于单独检查向量库是否能召回相关文本块。
-              </p>
-
               <label for="searchDocumentId">document_id</label>
-              <input id="searchDocumentId" placeholder="索引成功后会自动填入" />
+              <input id="searchDocumentId" placeholder="上传或选择会话后自动填入" />
 
               <label for="searchQuery">检索问题</label>
-              <textarea id="searchQuery" placeholder="例如：这篇论文主要研究了什么问题？"></textarea>
+              <textarea id="searchQuery" placeholder="例如：这篇论文主要研究什么问题？"></textarea>
 
               <label for="searchTopK">top-k</label>
               <input id="searchTopK" type="number" value="3" min="1" />
 
-              <button id="searchButton" class="ghost-button" type="button" onclick="searchChunks()">检索相关片段</button>
+              <button id="searchButton" class="ghost-button" type="button">检索相关片段</button>
               <div id="searchStatus" class="status"></div>
               <div id="searchResult" class="result"></div>
             </div>
           </details>
+        </div>
+
+        <div class="user-footer">
+          <div class="user-avatar" id="activeUserAvatar">U</div>
+          <div class="user-info">
+            <strong id="activeUserName">未登录</strong>
+            <span id="activeUserType">general</span>
+          </div>
+          <button id="logoutButton" class="logout-button" type="button">退出</button>
         </div>
       </aside>
 
       <main class="main">
         <header class="topbar">
           <div class="topbar-title">
-            <strong>DocRAG Agent：面向 PDF 文献阅读的 RAG 智能助手</strong>
-            
+            <strong>DocRAG Agent</strong>
+            <span id="currentContextText">先上传 PDF，或从左侧选择历史会话。</span>
           </div>
-          <span class="topbar-badge">Conversation API</span>
+          <span class="topbar-badge">RAG with Sources</span>
         </header>
 
         <section class="chat" id="chatWindow">
-          <div class="welcome">
+          <div id="emptyState" class="welcome">
             <div class="welcome-card">
-              <h1>上传 PDF 文献，然后开始提问</h1>
+              <h1>上传 PDF，然后开始提问</h1>
               <p>
-                左侧负责上传、索引和检索调试，中间负责显示问答结果，底部负责输入问题。
-                PDF 索引完成后会创建 conversation，连续提问会保存 user、assistant 消息和引用来源。
+                系统会解析 PDF、切分文本、写入向量库，并把你的问题、回答和引用来源保存到当前会话中。
               </p>
-
               <div class="quick-grid">
                 <div class="quick-card">
                   <strong>1. 建立索引</strong>
-                  <span>先在左侧上传 PDF，得到 document_id。</span>
+                  <span>在左侧上传 PDF，系统会得到 document_id。</span>
                 </div>
                 <div class="quick-card">
-                  <strong>2. 输入问题</strong>
-                  <span>底部输入文献相关问题，设置 top-k。</span>
+                  <strong>2. 连续提问</strong>
+                  <span>底部输入问题，回答会保存到 conversation。</span>
                 </div>
                 <div class="quick-card">
                   <strong>3. 查看引用</strong>
-                  <span>回答下方会显示检索到的原文片段。</span>
+                  <span>助手回答下方会展示检索到的原文片段。</span>
                 </div>
               </div>
             </div>
@@ -118,18 +157,18 @@
         <section class="composer-wrap">
           <div class="composer">
             <div class="composer-meta">
-              <input id="answerConversationId" placeholder="conversation_id：索引成功后会自动填入" readonly />
+              <input id="answerConversationId" placeholder="conversation_id：上传或选择会话后自动填入" readonly />
               <input id="answerTopK" type="number" value="3" min="1" title="top-k" />
             </div>
 
             <div class="input-shell">
-              <textarea id="answerQuery" placeholder="向这份文献提问，例如：这篇论文的研究目的、方法和结论分别是什么？"></textarea>
-              <button id="answerButton" class="send-button" type="button" onclick="answerQuestion()" aria-label="发送">↑</button>
+              <textarea id="answerQuery" placeholder="向这份 PDF 提问，例如：这篇论文的研究目的、方法和结论分别是什么？"></textarea>
+              <button id="answerButton" class="send-button" type="button" aria-label="发送">↑</button>
             </div>
 
             <div id="answerStatus" class="status"></div>
             <p class="composer-note">
-              本系统用于辅助阅读 PDF 文献，回答内容请结合原始文档与引用来源核验。
+              回答仅用于辅助阅读，请结合原文片段和引用来源核验。
             </p>
           </div>
         </section>

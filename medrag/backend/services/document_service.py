@@ -61,5 +61,5 @@ async def get_existing_document_for_user(user_id, document_id) -> dict:
     
     document = await find_document_by_user_and_id(user_id, document_id)
     if not document:
-        raise ValueError("文档不存在")
+        raise ValueError("文档不存在或不属于当前用户")
     return document
