@@ -73,7 +73,7 @@ async def index_pdfs(user_id: str, file: UploadFile = File(...), chunk_size: int
         raise_service_error(e)
     
     return {
-        "message": f"成功处理文件 '{context['文件名']}'，共 {context['总页数']} 页，生成 {len(chunks)} 个文本块，成功保存 {saved_count} 个块到向量数据库。",
+        "message": f"成功处理文件 '{context['文件名']}'，共 {len(pages)} 页，生成 {len(chunks)} 个文本块，成功保存 {saved_count} 个块到向量数据库。",
         "文件名": context["文件名"],
         "总页数": len(pages),
         "总块数": len(chunks),

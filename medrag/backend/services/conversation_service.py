@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from services.document_service import get_existing_document_for_user
 from stores.conversation_store import find_conversations,insert_conversation
 
 from services.user_service import get_existing_user
@@ -11,10 +12,13 @@ async def create_conversation(user_id: str, document_id: str, title: str = "新�
     if not document_id:
         raise ValueError("document_id不能为空")
     
-    if not user_id.strip():
+    user_id = user_id.strip()
+    if not user_id:
         raise ValueError("user_id不能为空")
+
     
     await get_existing_user(user_id)
+    await get_existing_document_for_user(user_id, document_id)
     # 清理标题，空标题改为“新会话”
     title = title.strip() or "新会话"
     # 生成 now 和 conversation_id

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from stores.document_store import find_document_by_user_and_hash, insert_document
+from stores.document_store import find_document_by_user_and_hash, find_document_by_user_and_id, insert_document
 
 async def get_or_create_document(user_id, filename, document_hash) -> dict:
     user_id = user_id.strip()
@@ -48,3 +48,18 @@ async def get_or_create_document(user_id, filename, document_hash) -> dict:
         "created_at": document["created_at"],
         "updated_at": document["updated_at"],
     }
+
+
+async def get_existing_document_for_user(user_id, document_id) -> dict:
+    user_id = user_id.strip()
+    if not user_id:
+        raise ValueError("user_id 不能为空")
+    
+    document_id = document_id.strip()
+    if not document_id:
+        raise ValueError("document_id 不能为空")
+    
+    document = await find_document_by_user_and_id(user_id, document_id)
+    if not document:
+        raise ValueError("文档不存在")
+    return document

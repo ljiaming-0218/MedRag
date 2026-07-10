@@ -10,7 +10,12 @@ async def find_document_by_user_and_hash(user_id, document_hash) -> dict:
     document = await document_collection.find_one({"user_id": user_id, "document_hash": document_hash})
     return document
 
+async def find_document_by_user_and_id(user_id, document_id) -> dict:
+    database = get_database()
+    document_collection = database["documents"]
 
+    document = await document_collection.find_one({"user_id": user_id, "_id": document_id})
+    return document
 
 async def insert_document(document) -> None:
     database = get_database()
