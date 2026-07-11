@@ -18,6 +18,36 @@ def _raise_chroma_error(operation: str, error: Exception) -> None:
         f"请备份并重建 {CHROMA_DIR} 后重新索引 PDF。原始错误: {error}"
     ) from error
 
+def has_chunks(user_id: str, document_id: str) -> bool:
+    if not user_id:
+        raise ValueError("user_id 不能为空")
+    if not document_id:
+        raise ValueError("document_id 不能为空")
+
+    client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+    try:
+        collection = client.get_collection(name=COLLECTION_NAME)
+    except NotFoundError:
+        return False
+    except InternalError as exc:
+        _raise_chroma_error("读取集合", exc)
+
+    try:
+        result = collection.get(
+            where={
+                "$and": [
+                    {"user_id": user_id},
+                    {"document_id": document_id},
+                ]
+            },
+            limit=1,
+        )
+    except InternalError as exc:
+        _raise_chroma_error("检查文档索引", exc)
+
+    return bool(result.get("ids"))
+
+
 def save_chunks(chunks:list[dict]) -> int:
     if not chunks:
         return 0

@@ -5,6 +5,8 @@ from stores.conversation_store import find_conversation_by_id
 from services.llm_service import generate_answer
 from services.message_service import get_recent_messages, create_message
 
+NO_SOURCE_ANSWER = "当前文献未提供相关信息。"
+
 
 async def prepare_ask_context(user_id: str, conversation_id: str, query: str, history_limit: int = 6, n_results: int = 3) -> dict:
     if not user_id.strip():
@@ -45,11 +47,15 @@ async def prepare_ask_context(user_id: str, conversation_id: str, query: str, hi
 
 async def ask_conversation(user_id: str, conversation_id: str, query: str, history_limit: int = 6, n_results: int = 3,) -> dict:
     context = await prepare_ask_context(user_id, conversation_id, query, history_limit, n_results)
-    answer = await to_thread(generate_answer, context["prompt"])
+    if context["sources"]:
+        answer = await to_thread(generate_answer, context["prompt"])
+    else:
+        answer = NO_SOURCE_ANSWER
     assistant_message = await create_message(conversation_id, "assistant", answer, context["sources"])
     return {
         "conversation_id": context["conversation_id"],
         "answer": answer,
         "sources": context["sources"],
+        "sources_count": context["sources_count"],
         "assistant_message": assistant_message,
     }

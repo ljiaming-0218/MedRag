@@ -6,7 +6,7 @@ from services.llm_service import generate_answer
 from services.prompt_service import build_rag_prompt
 from services.text_splitter import split_pages
 from services.embedding_service import embed_chunks
-from services.vector_store_service import save_chunks
+from services.vector_store_service import has_chunks, save_chunks
 from services.build_pdf_pages import build_pdf_pages, parse_document_pages, prepare_document
 from services.search_service import search_relevant_chunks
 
@@ -52,7 +52,8 @@ async def index_pdfs(user_id: str, file: UploadFile = File(...), chunk_size: int
         raise HTTPException(status_code=400, detail=str(e))
     context = await prepare_document(user_id, file)
 
-    if context["existing_document"]:
+    reindexed = context["existing_document"]
+    if context["existing_document"] and has_chunks(user["user_id"], context["document_id"]):
         return {
             "message": f"文件 '{context['文件名']}' 已存在，跳过索引。",
             "文件名": context["文件名"],
@@ -60,6 +61,7 @@ async def index_pdfs(user_id: str, file: UploadFile = File(...), chunk_size: int
             "user_id": user["user_id"],
             "document_hash": context["document_hash"],
             "existing_document": context["existing_document"],
+            "reindexed": False,
         }
 
     pages = parse_document_pages(context["save_path"], context)
@@ -84,6 +86,7 @@ async def index_pdfs(user_id: str, file: UploadFile = File(...), chunk_size: int
         "user_id": user["user_id"],
         "document_hash": context["document_hash"],
         "existing_document": context["existing_document"],
+        "reindexed": reindexed,
         
     }
 
