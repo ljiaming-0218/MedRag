@@ -275,6 +275,29 @@ function renderMessages(messages) {
   scrollChatToBottom();
 }
 
+async function startBlankConversation() {
+  currentDocumentId = "";
+  currentConversationId = "";
+
+  $("pdfFile").value = "";
+  $("searchDocumentId").value = "";
+  $("answerConversationId").value = "";
+  $("answerResult").innerHTML = "";
+  $("indexResult").innerHTML = "";
+  $("searchResult").innerHTML = "";
+  $("answerQuery").value = "";
+  $("searchQuery").value = "";
+
+  clearStatus("indexStatus");
+  clearStatus("searchStatus");
+  clearStatus("answerStatus");
+
+  $("emptyState").classList.remove("hidden");
+  updateContextText(null);
+  renderConversationList();
+}
+
+
 async function startNewConversation() {
   if (!currentDocumentId) {
     setStatus("answerStatus", "请先上传并索引一个 PDF 文件。", "error");
@@ -549,7 +572,7 @@ async function answerQuestion() {
 function bindEvents() {
   $("authForm").addEventListener("submit", handleAuthSubmit);
   $("logoutButton").addEventListener("click", logout);
-  $("newConversationButton").addEventListener("click", startNewConversation);
+  $("newConversationButton").addEventListener("click", startBlankConversation);
   $("indexButton").addEventListener("click", indexPdf);
   $("searchButton").addEventListener("click", searchChunks);
   $("answerButton").addEventListener("click", answerQuestion);
