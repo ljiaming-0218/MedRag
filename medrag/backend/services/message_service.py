@@ -5,7 +5,7 @@ from stores.conversation_store import find_conversation_by_id, update_conversati
 from stores.message_store import find_recent_messages_by_conversation, insert_message, find_messages_by_conversation
 
 
-async def create_message(conversation_id: str, role: str, content: str, sources: list[dict] | None = None) -> dict:
+async def create_message(conversation_id: str, role: str, content: str, sources: list[dict] | None = None, rewritten_query: str | None = None,) -> dict:
     conversation_id = conversation_id.strip()
     if not conversation_id:
         raise ValueError("conversation_id 不能为空")
@@ -29,14 +29,16 @@ async def create_message(conversation_id: str, role: str, content: str, sources:
     now = datetime.now(timezone.utc)
     message_id = str(uuid4())
 
+
     message = {
         "_id": message_id, 
         "conversation_id": conversation_id,
         "role": role,
         "content": content,
         "sources": sources,
+        "rewritten_query": rewritten_query,
         "created_at": now,
-        
+   
     }
 
     await insert_message(message)
@@ -47,8 +49,8 @@ async def create_message(conversation_id: str, role: str, content: str, sources:
         "role": message["role"],
         "content": message["content"],
         "sources": message["sources"],
+        "rewritten_query": message["rewritten_query"],
         "created_at": message["created_at"],
-        
     }
 
 async def list_messages(user_id: str, conversation_id: str) -> list[dict]:
@@ -78,6 +80,7 @@ async def list_messages(user_id: str, conversation_id: str) -> list[dict]:
             "role": message["role"],
             "content": message["content"],
             "sources": message["sources"],
+            "rewritten_query": message.get("rewritten_query"),
             "created_at": message["created_at"],
         })
 
@@ -106,6 +109,7 @@ async def get_recent_messages(conversation_id: str, limit: int=6) -> list[dict]:
             "role": message["role"],
             "content": message["content"],
             "sources": message["sources"],
+            "rewritten_query": message.get("rewritten_query"),
             "created_at": message["created_at"],
         })
 

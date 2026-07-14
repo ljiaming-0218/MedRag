@@ -1,4 +1,5 @@
 from asyncio import to_thread
+from services.query_rewrite_service import rewrite_query
 from services.prompt_service import build_rag_prompt
 from services.search_service import search_relevant_chunks
 from stores.conversation_store import find_conversation_by_id
@@ -29,20 +30,24 @@ async def prepare_ask_context(user_id: str, conversation_id: str, query: str, hi
     
     history = await get_recent_messages(conversation_id, history_limit)
     user_message = await create_message(conversation_id, "user", query)
-    sources = await to_thread(search_relevant_chunks, user_id, conversation["document_id"], query, n_results)
+    
+    rewritten_query = await to_thread(rewrite_query, history, query)
+    sources = await to_thread(search_relevant_chunks, user_id, conversation["document_id"], rewritten_query, n_results)
     prompt= build_rag_prompt(query, sources, history)
+    
     context = {
         "conversation_id": conversation["_id"],
         "document_id": conversation["document_id"],
         "user_id": conversation["user_id"],
         "history": history,
         "query": query,
+        "rewritten_query": rewritten_query,
         "user_message": user_message,
         "sources": sources,
         "sources_count": len(sources),
         "prompt": prompt,
     }
-
+    
     return context
 
 async def ask_conversation(user_id: str, conversation_id: str, query: str, history_limit: int = 6, n_results: int = 3,) -> dict:
@@ -51,11 +56,13 @@ async def ask_conversation(user_id: str, conversation_id: str, query: str, histo
         answer = await to_thread(generate_answer, context["prompt"])
     else:
         answer = NO_SOURCE_ANSWER
-    assistant_message = await create_message(conversation_id, "assistant", answer, context["sources"])
+    assistant_message = await create_message(conversation_id, "assistant", answer, context["sources"], context["rewritten_query"])
     return {
         "conversation_id": context["conversation_id"],
         "answer": answer,
         "sources": context["sources"],
-        "sources_count": context["sources_count"],
+        "sources_count": context["sources_count"],        
+        "rewritten_query": context["rewritten_query"],
         "assistant_message": assistant_message,
+
     }
