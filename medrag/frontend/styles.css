@@ -20,6 +20,7 @@
   --info-bg: #eff6ff;
   --info: #1d4ed8;
   --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --sidebar-width: 320px;
 }
 
 * {
@@ -108,8 +109,12 @@ button {
 }
 
 .sidebar {
-  width: 320px;
-  min-width: 320px;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  height: 100vh;
   background: var(--sidebar);
   color: #f9fafb;
   display: flex;
@@ -416,6 +421,9 @@ button:disabled {
 .main {
   flex: 1;
   min-width: 0;
+  width: calc(100% - var(--sidebar-width));
+  min-height: 100vh;
+  margin-left: var(--sidebar-width);
   display: flex;
   flex-direction: column;
   background: var(--main);
@@ -836,8 +844,16 @@ button:disabled {
   }
 
   .sidebar {
+    position: static;
     width: 100%;
     min-width: 0;
+    height: auto;
+  }
+
+  .main {
+    width: 100%;
+    min-height: 100vh;
+    margin-left: 0;
   }
 
   .topbar {
