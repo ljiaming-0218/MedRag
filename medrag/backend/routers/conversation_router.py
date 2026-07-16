@@ -19,6 +19,7 @@ class AskConversationRequest(BaseModel):
     query: str = Field(min_length=1)
     history_limit: int = Field(default=6, ge=1, le=20)
     n_results: int = Field(default=3, ge=1, le=10)
+    user_type: str | None = None
 
 @router.post("", status_code=201)
 async def create_conversation_endpoint(request: CreateConversationRequest,) -> dict:
@@ -49,7 +50,7 @@ async def list_messages_endpoint(conversation_id: str, user_id: str = Query(...)
 @router.post("/{conversation_id}/ask")
 async def ask_conversation_endpoint(conversation_id: str, request: AskConversationRequest,) -> dict:
     try:
-        result = await ask_conversation(request.user_id, conversation_id, request.query, request.history_limit, request.n_results)
+        result = await ask_conversation(request.user_id, conversation_id, request.query, request.history_limit, request.n_results, request.user_type)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     

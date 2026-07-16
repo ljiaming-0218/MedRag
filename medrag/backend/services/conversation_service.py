@@ -17,7 +17,8 @@ async def create_conversation(user_id: str, document_id: str, title: str = "新�
         raise ValueError("user_id不能为空")
 
     
-    await get_existing_user(user_id)
+    user = await get_existing_user(user_id)
+    
     await get_existing_document_for_user(user_id, document_id)
     # 清理标题，空标题改为“新会话”
     title = title.strip() or "新会话"
@@ -29,6 +30,7 @@ async def create_conversation(user_id: str, document_id: str, title: str = "新�
         "title": title,
         "document_id": document_id,
         "user_id": user_id,  
+        "user_type": user["default_user_type"],
         "created_at": now,
         "updated_at": now,
     }
@@ -39,6 +41,7 @@ async def create_conversation(user_id: str, document_id: str, title: str = "新�
         "conversation_id": conversation["_id"],
         "title": conversation["title"],
         "document_id": conversation["document_id"],
+        "user_type": conversation["user_type"],
         "created_at": conversation["created_at"],
         "updated_at": conversation["updated_at"],
     }
@@ -63,6 +66,7 @@ async def list_conversations(user_id: str, limit: int = 50) -> list[dict]:
             "user_id": conversation["user_id"],
             "title": conversation["title"],
             "document_id": conversation["document_id"],
+            "user_type": conversation.get("user_type", "general"),
             "created_at": conversation["created_at"],
             "updated_at": conversation["updated_at"],
         })

@@ -8,6 +8,12 @@
 用户问题：
 {question}
 
+当前用户类型：
+{user_type}
+
+回答要求：
+{user_type_instruction}
+
 参考文档片段：
 {context}
 
