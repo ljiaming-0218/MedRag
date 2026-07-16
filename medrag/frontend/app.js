@@ -270,7 +270,9 @@ function renderMessages(messages) {
 
   $("emptyState").classList.add("hidden");
   messages.forEach((message) => {
-    appendMessage(message.role, message.content, message.sources || []);
+    appendMessage(message.role, message.content, message.sources || [], {
+      taskType: message.task_type,
+    });
   });
   scrollChatToBottom();
 }
@@ -496,10 +498,11 @@ async function searchChunks() {
   }
 }
 
-function appendMessage(role, content, sources = []) {
+function appendMessage(role, content, sources = [], options = {}) {
   $("emptyState").classList.add("hidden");
   const isUser = role === "user";
   const sourceTargetId = `sources-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const taskType = options.taskType;
 
   $("answerResult").insertAdjacentHTML(
     "beforeend",
@@ -508,10 +511,23 @@ function appendMessage(role, content, sources = []) {
         <div class="avatar ${isUser ? "user" : "assistant"}">${isUser ? "你" : "AI"}</div>
         <div class="message-content">
           <div class="message-role">${isUser ? "You" : "DocRAG Assistant"}</div>
+          ${
+            !isUser && taskType
+              ? `<div class="message-meta"><span class="task-badge">任务类型：${escapeHtml(taskType)}</span></div>`
+              : ""
+          }
           <p>${escapeHtml(content)}</p>
           ${
             !isUser
-              ? `<div class="sources-title">引用来源 · ${escapeHtml(sources.length)} 条</div><div id="${sourceTargetId}"></div>`
+              ? `
+                <details class="sources-panel">
+                  <summary>
+                    <span>引用来源 · ${escapeHtml(sources.length)} 条</span>
+                    <span class="sources-toggle">展开/收起</span>
+                  </summary>
+                  <div id="${sourceTargetId}" class="sources-body"></div>
+                </details>
+              `
               : ""
           }
         </div>
@@ -558,7 +574,9 @@ async function answerQuestion() {
     const data = await parseResponse(response);
 
     appendMessage("user", query);
-    appendMessage("assistant", data.answer, data.sources || []);
+    appendMessage("assistant", data.answer, data.sources || [], {
+      taskType: data.task_type,
+    });
     $("answerQuery").value = "";
     setStatus("answerStatus", "回答生成完成。", "success");
     await loadConversations();
